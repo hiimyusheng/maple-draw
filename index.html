@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>夜暮抽獎機</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<style>
+    #root {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+    }
+    #input-area, #output-area, #draw-result {
+        display: flex;
+        flex-direction: column;
+        width: 50vw;
+        padding: 15px;
+    }
+    #input-text, #output-text, #prize-text {
+        height: 45vh;
+        font-size: 18px;
+    }
+    #calculate {
+        height: 10vh;
+        width: 5vw;
+    }
+    #input-label, #output-label, #prize-label {
+        font-size: 20px;
+        padding: 3px;
+    }
+    #draw-area {
+        display: flex;
+        width: 100vw;
+        padding: 15px;
+    }
+    #title {
+        text-align: center;
+        font-size: 40px;
+    }
+
+</style>
+<body>
+    <div id="title">
+        <div>夜暮抽獎機</div>
+    </div>
+    <div id="root">
+        <div id="input-area">
+            <label id="input-label" for="input-text">輸入名單</label>
+            <textarea type="textarea" id="input-text"></textarea>
+        </div>
+        <button id="calculate" onclick="trans()">»計算獎券»</button>
+        <div id="output-area">
+            <label id="output-label" for="output-text">輸出名單</label>
+            <textarea type="textarea" id="output-text">id, 水道獎券數, 旗幟獎券數&#13;</textarea>
+        </div>
+    </div>
+    <div id="draw-area">
+        <div id="prize-count">
+            <div>
+                <label>水路抽獎數</label>&nbsp;<input id="water">&nbsp;<button onclick="waterDraw()">»抽獎»</button>
+            </div>
+            <div>
+                <label>旗幟抽獎數</label>&nbsp;<input id="flag">&nbsp;<button onclick="flagDraw()">»抽獎»</button">
+            </div>
+            <div>
+                <label>全勤抽獎數</label>&nbsp;<input id="all">&nbsp;<button onclick="allDraw()">»抽獎»</button">
+            </div>
+            <button onclick="show()">加權名單</button>
+            
+        </div>
+        <div id="draw-result">
+            <pre id="prize-list"></pre>
+            <label id="prize-label" for="prize-text">得獎名單</label>
+            <textarea type="textarea" id="prize-text" disabled></textarea>
+        </div>
+    </div>
+</body>
+<script>
+    let drawArray = []
+    let showToggle = false;
+    function trans() {
+        let initText = "id, 水道獎券數, 旗幟獎券數\n";
+        let input = document.getElementById('input-text').value;
+        let output = document.getElementById('output-text');
+        let lines = input.split('\n');
+        if (input == "") {
+            return alert('請先輸入名單');
+        }
+        output.value = initText;
+        for(let i = 0; i < lines.length; i++){
+            let waterTickets = 0;
+            let flagTickets = 0;
+            let result = lines[i].split(',');
+            if (result.length != 3) {
+                continue;
+            }
+            let waterScore = parseInt(result[1]);
+            if (waterScore > 5000) {
+                waterTickets += 1;
+            }
+            waterTickets += Math.floor(waterScore /= 10000);
+            let flagScore = parseInt(result[2]);
+            switch (flagScore) {
+                case flagScore >= 200 && flagScore < 400:
+                    flagTickets = 1;
+                    break;
+                case flagScore >= 400 && flagScore < 650:
+                    flagTickets = 2;
+                    break;
+                case flagScore >= 650 && flagScore < 1000:
+                    flagTickets = 3;
+                    break
+                case flagScore = 1000:
+                    flagTickets = 5;
+                    break;
+                default:
+                    break
+            }
+            output.value += result[0] + ', ' + waterTickets + ', ' + flagTickets + '\n';
+            drawArray.push([result[0], waterTickets, flagTickets]);
+        }
+    }
+    function waterDraw() {
+        let prizeText = document.getElementById('prize-text');
+        let prizeCount = document.getElementById('water').value;
+        prizeCount = parseInt(prizeCount);
+        if (isNaN(prizeCount)) {
+            return alert('請輸入數字');
+        }
+        prizeText.value = '水路獎 抽出 共 ' + prizeCount + ' 名\n' + '得獎的有:\n';
+        if (drawArray.length == 0) {
+            trans();
+        }
+        let waterList = [];
+        for (let i = 0; i < drawArray.length; i++) {
+            for (let j = 0; j < drawArray[i][1]; j++) {
+                waterList.push(drawArray[i][0]);
+            }
+        }
+        for (let i = 0; i < prizeCount; i++) {
+            let index = randomDraw(waterList.length);
+            let bingo = waterList[index];
+            prizeText.value += bingo + '\n';
+            waterList = waterList.filter(e => e != bingo);
+            if (waterList.length == 0) {
+                return;
+            }
+        }
+    }
+    function flagDraw() {
+        let prizeText = document.getElementById('prize-text');
+        let prizeCount = document.getElementById('flag').value;
+        prizeCount = parseInt(prizeCount);
+        if (isNaN(prizeCount)) {
+            return alert('請輸入數字');
+        }
+        prizeText.value = '旗幟獎 抽出 共 ' + prizeCount + ' 名\n' + '得獎的有:\n';
+        if (drawArray.length == 0) {
+            trans();
+        }
+        let flagList = [];
+        for (let i = 0; i < drawArray.length; i++) {
+            for (let j = 0; j < drawArray[i][2]; j++) {
+                flagList.push(drawArray[i][0]);
+            }
+        }
+        for (let i = 0; i < prizeCount; i++) {
+            let index = randomDraw(flagList.length);
+            let bingo = flagList[index];
+            prizeText.value += bingo + '\n';
+            flagList = flagList.filter(e => e != bingo);
+            if (flagList.length == 0) {
+                return;
+            }
+        }
+    }
+    function allDraw () {
+        let prizeText = document.getElementById('prize-text');
+        let prizeCount = document.getElementById('all').value;
+        prizeCount = parseInt(prizeCount);
+        if (isNaN(prizeCount)) {
+            return alert('請輸入數字');
+        }
+        prizeText.value = '全勤獎 抽出 共 ' + prizeCount + ' 名\n' + '得獎的有:\n';
+        if (drawArray.length == 0) {
+            trans();
+        }
+        for (let i = 0; i < prizeCount; i++) {
+            let index = randomDraw(drawArray.length);
+            let bingo = drawArray[index][0];
+            prizeText.value += bingo + '\n';
+            drawArray = drawArray.filter(e => e[0] != bingo);
+            if (drawArray.length == 0) {
+                return;
+            }
+        }
+    }
+    function show() {
+        if (drawArray.length == 0) {
+            trans();
+        }
+        const printString = JSON.stringify(drawArray, null, 2);
+        document.getElementById('prize-list').innerHTML = printString;
+        if (showToggle) {
+            document.getElementById('prize-list').style.display = 'none';
+            document.getElementById('prize-label').style.display = 'block';
+            document.getElementById('prize-text').style.display = 'block';
+            showToggle = false;
+        } else {
+            document.getElementById('prize-list').style.display = 'block';
+            document.getElementById('prize-label').style.display = 'none';
+            document.getElementById('prize-text').style.display = 'none';
+            showToggle = true;
+        }
+    }
+    function randomDraw(maxIndex) {
+        return Math.floor(Math.random() * maxIndex);
+    }
+</script>
+</html>
