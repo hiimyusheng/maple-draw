@@ -32,6 +32,8 @@
     }
     #draw-area {
         display: flex;
+        justify-content: space-around;
+        align-items: center;
         width: 100vw;
         padding: 15px;
     }
@@ -67,8 +69,6 @@
             <div>
                 <label>全勤抽獎數</label>&nbsp;<input id="all">&nbsp;<button onclick="allDraw()">»抽獎»</button">
             </div>
-            <button onclick="show()">加權名單</button>
-            
         </div>
         <div id="draw-result">
             <pre id="prize-list"></pre>
@@ -112,7 +112,7 @@
                 case flagScore >= 650 && flagScore < 1000:
                     flagTickets = 3;
                     break
-                case flagScore = 1000:
+                case flagScore == 1000:
                     flagTickets = 5;
                     break;
                 default:
